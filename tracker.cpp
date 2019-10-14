@@ -16,14 +16,13 @@ struct group
 	string gid;
 	string owner;
 	vector<string> members;
+	map<string,string> pending_requests;
 };
 
 vector<string> sha_container;
 map<string,string> users;
 map<string,int> active_users;
 vector<struct group> active_groups;
-
-
 
 
 int mycomp(string pass, string password)
@@ -253,132 +252,202 @@ void act(int status, int newsock)
 		}
 					
   	}
-  		if(status==2)
-  		{
-  			//cout<<"inside act inside login"<<endl;
-  			char bi[100];
-  			bzero(bi,100);
-  			read(newsock,bi,100);
-  			//string user_name=string(b);
-			send(newsock,"ok",2,0);
+  	if(status==2)
+  	{
+  		//cout<<"inside act inside login"<<endl;
+  		char bi[100];
+  		bzero(bi,100);
+  		read(newsock,bi,100);
+  		//string user_name=string(b);
+		send(newsock,"ok",2,0);
 
-			char buff[100];
-			bzero(buff,100);
+		char buff[100];
+		bzero(buff,100);
 
-			read(newsock,buff, 100);
-			//string password=string(buf);
-			//send(newsock,"ok",2,0);
-			string c_id=login_user(bi,buff,newsock);
-			//cout<<"current client id is "<<c_id<<endl;
+		read(newsock,buff, 100);
+		//string password=string(buf);
+		//send(newsock,"ok",2,0);
+		string c_id=login_user(bi,buff,newsock);
+		//cout<<"current client id is "<<c_id<<endl;
 	
-  		}
-  		if(status==3)
+  	}
+  	if(status==3)
+  	{
+  		cout<<"inside create group if"<<endl;
+  		char cg[100];
+  		bzero(cg,100);
+  		read(newsock,cg,100);
+  		cout<<"Group name is "<<cg<<endl;
+  		string gname=string(cg);
+  		//cout<<cg<<endl;
+  		//cout<<"user id of the user is "<<id_user<<endl;
+  		//cout<<"client id is "<<c_id<<endl;
+  		send(newsock,"ok",2,0);
+  		bzero(cg,100);
+  		read(newsock,cg,100);
+
+		string cid=string(cg);
+		cout<<"port of client is "<<cid<<endl;
+  		group g;
+  		g.gid=gname;
+  		g.owner=cid;
+  		g.members.push_back(cid);
+  		active_groups.push_back(g);
+
+  		vector<group>::iterator itr;
+  		cout<<"beginning of for loop"<<endl;
+  		for(itr=active_groups.begin();itr!=active_groups.end();++itr)
   		{
-  			cout<<"inside create group if"<<endl;
-  			char cg[100];
-  			bzero(cg,100);
-  			read(newsock,cg,100);
-  			cout<<"Group name is "<<cg<<endl;
-  			string gname=string(cg);
-  			//cout<<cg<<endl;
-  			//cout<<"user id of the user is "<<id_user<<endl;
-  			//cout<<"client id is "<<c_id<<endl;
-  			send(newsock,"ok",2,0);
-  			bzero(cg,100);
-  			read(newsock,cg,100);
-
-			string cid=string(cg);
-			cout<<"port of client is "<<cid<<endl;
-  			group g;
-  			g.gid=gname;
-  			g.owner=cid;
-  			g.members.push_back(cid);
-  			active_groups.push_back(g);
-
-  			vector<group>::iterator itr;
-  			cout<<"beginning of for loop"<<endl;
-  			for(itr=active_groups.begin();itr!=active_groups.end();++itr)
+  			cout<<itr->gid<<endl;
+  			cout<<itr->owner<<endl;
+  			for(auto x=itr->members.begin();x!=itr->members.end();++x)
   			{
-  				cout<<itr->gid<<endl;
-  				cout<<itr->owner<<endl;
-  				for(auto x=itr->members.begin();x!=itr->members.end();++x)
+  				cout<<*x<<endl;
+  			}
+
+  		}
+
+  		send(newsock,"group created",strlen("group created"),0);
+  	
+  	}
+
+  	if(status==4)
+  	{
+  		char buf[100]={'\0'};
+  		read(newsock,buf,100);
+  		cout<<endl;
+  		//cout<<buf<<endl;
+  		string gid=string(buf);
+
+  		vector<group>::iterator itr;
+
+  		for(itr=active_groups.begin();itr!=active_groups.end();++itr)
+  		{
+  			if(itr->gid==gid)
+  			{
+  				send(newsock,"port",strlen("port"),0);
+  				char buffer[50]={'\0'};
+  				read(newsock,buffer,50);
+  				cout<<endl;
+  				string c_port=string(buffer);
+
+  				itr->pending_requests.insert(make_pair(c_port,gid));
+
+  				send(newsock,"request sent",strlen("request sent"),0);  					
+			}
+  		}
+  		if(itr==active_groups.end())
+  		{
+  			send(newsock,"wrong gid",strlen("wrong gid"),0);
+  		}
+  		
+
+  	}
+
+  	if(status==5)
+  	{	
+  		char buf[100]={'\0'};
+  		read(newsock,buf,100);
+  		cout<<buf<<endl;
+  		string gid=string(buf);
+
+  		vector<group>::iterator itr;
+
+  		for(itr=active_groups.begin();itr!=active_groups.end();++itr)
+  		{
+  			if(itr->gid==gid)
+  			{
+  				send(newsock,"port",strlen("port"),0);
+  				char buffer[50]={'\0'};
+  				read(newsock,buffer,50);
+  				cout<<endl;
+  				string c_port=string(buffer);
+
+  				if(itr->owner==c_port)
   				{
-  					cout<<*x<<endl;
+  					send(newsock,"owner cannot leave!",strlen("owner cannot leave!"),0);  					
+  				}
+  				else
+  				{
+  					send(newsock,"No longer a member now",strlen("No longer a member now"),0);
   				}
 
   			}
+		}
 
-  			send(newsock,"group created",strlen("group created"),0);
-  		
-  		}
+		if(itr==active_groups.end())
+		{
+			send(newsock,"Wrong id",strlen("Wrong id"),0);
+		}
 
-  		if(status==8)
+  	}
+
+  	if(status==8)
+  	{
+  		char buf[10]={'\0'};
+  		read(newsock,buf,10);
+  		cout<<buf<<endl;
+  		vector<string> gids;
+
+  		vector<group>::iterator itr;
+  		for(itr=active_groups.begin();itr!=active_groups.end();++itr)
   		{
-  			char buf[10]={'\0'};
-  			read(newsock,buf,10);
-  			cout<<buf<<endl;
-  			vector<string> gids;
+  			//cout<<itr->gid<<endl;
+  			gids.push_back(itr->gid);
+		}
+		int length=gids.size();
+		char l[length+1]={'\0'};
+		sprintf(l, "%d", length);
+		send(newsock,l,strlen(l),0);
 
-  			vector<group>::iterator itr;
-  			for(itr=active_groups.begin();itr!=active_groups.end();++itr)
-  			{
-  				//cout<<itr->gid<<endl;
-  				gids.push_back(itr->gid);
-			}
-			int length=gids.size();
-			char l[length+1]={'\0'};
-			sprintf(l, "%d", length);
-			send(newsock,l,strlen(l),0);
+		read(newsock,buf,10);
 
-			read(newsock,buf,10);
-
-			for(auto i=gids.begin();i!=gids.end();++i)
-			{
-				string s=*i;
-				char gname[100]={'\0'};
-				strcpy(gname,s.c_str());
-				send(newsock,gname,strlen(gname),0);
-				char buff[10]={'\0'};
-				read(newsock,buff,10);
-				cout<<buff<<endl;
-			}
-
-  		}
+		for(auto i=gids.begin();i!=gids.end();++i)
+		{
+			string s=*i;
+			char gname[100]={'\0'};
+			strcpy(gname,s.c_str());
+			send(newsock,gname,strlen(gname),0);
+			char buff[10]={'\0'};
+			read(newsock,buff,10);
+			cout<<buff<<endl;
+		}
+  	}
  
   		
-	  	if(status==14)
-	  	{
-			char buf[10];
-	  		//cout<<"inside case 14"<<endl;
-	  		read(newsock,buf,10);
-	  		int size=atoi(buf);
-	  		cout<<size<<endl;
-	  		send(newsock,"ok",strlen("ok"),0);
-	  		while(size)
-	  		{	
-	  			//cout<<"inside while"<<endl;
-	  			char buffer[20];
-	  			bzero(buffer,20);
-	  			read(newsock,buffer,20);
-	  			cout<<buffer<<endl;
-	    		string ss=string(buffer);
-	    		string s=ss.substr(0,20);
-	    		cout<<s<<endl;
+	if(status==14)
+	{
+		char buf[10];
+	  	//cout<<"inside case 14"<<endl;
+	  	read(newsock,buf,10);
+	  	int size=atoi(buf);
+	  	cout<<size<<endl;
+	  	send(newsock,"ok",strlen("ok"),0);
+	  	while(size)
+	  	{	
+	  		//cout<<"inside while"<<endl;
+	  		char buffer[20];
+	  		bzero(buffer,20);
+	  		read(newsock,buffer,20);
+	  		cout<<buffer<<endl;
+	    	string ss=string(buffer);
+	    	string s=ss.substr(0,20);
+	    	cout<<s<<endl;
 
-	    		sha_container.push_back(s);
-	    		bzero(buffer,20);
-	    		if(send(newsock,"success",strlen("success"),0)<0)
-	    			perror("Cannot send acknowledgement\n");
-	    		cout<<"SHA stored"<<endl;
-	    		size--;
-	  		}
+	    	sha_container.push_back(s);
+	    	bzero(buffer,20);
+	    	if(send(newsock,"success",strlen("success"),0)<0)
+	    		perror("Cannot send acknowledgement\n");
+	    	cout<<"SHA stored"<<endl;
+	    	size--;
+	  	}
 
 	  		/*cout<<endl<<"content of sha container"<<endl;
 	  		for(int i=0;i<sha_container.size();i++)
 	  		{
 	  			cout<<sha_container[i]<<endl;
 	  		}*/
-	  	}
+	}
   	
 }
 

@@ -18,6 +18,8 @@ class getcommand
     void login_user(vector<char*> , int);
     void create_group(vector<char*>, int);
     void list_groups(vector<char*>, int);
+    void leave_group(vector<char*>, int);
+    void join_group(vector<char*>, int);
 
     bool uploadfile(vector<char*> v, int sock)
     {
@@ -127,9 +129,11 @@ class getcommand
     		perror("Cannot send user id to the tracker\n");
     	}
         cout<<"about to create user"<<endl;
-    	bzero(buf,100);
-    	read(sock,buf,100);
-    	cout<<buf<<endl;
+
+    	char nn[50]={'\0'};
+        bzero(nn,'\0');
+    	read(sock,nn,50);
+    	cout<<nn<<endl;
     	
     }
 
@@ -155,6 +159,26 @@ class getcommand
       	string stop="stop_sharing";
 
        	int status;
+        if(v[0]==joingroup)
+        {   
+            cout<<"inside joingroup wala if"<<endl;
+
+            char com[joingroup.size()+1];
+            strcpy(com,joingroup.c_str());
+            int x;
+            cout<<com<<endl;
+            if ((x=send(sock,com,strlen(com),0))<0)     //command sent
+            {
+                perror("Cannot send command to the tracker\n");
+            }
+
+            char buf[10]={'\0'};
+            read(sock,buf,10);  //reading okay
+
+            status =4;
+            return status;
+
+        }
         if(v[0]==listgroups)
         {
             cout<<"inside list groups wala if"<<endl;
@@ -174,6 +198,25 @@ class getcommand
             return status;
 
         }
+        if(v[0]==leavegroup)
+        {
+            cout<<"inside leave group"<<endl;
+            char com[leavegroup.size()+1];
+            strcpy(com,leavegroup.c_str());
+            int x;
+            cout<<com<<endl;
+            if ((x=send(sock,com,strlen(com),0))<0)
+            {
+                perror("Cannot send command to the tracker\n");
+            }
+            char buf[10]={'\0'};
+            read(sock,buf,10);
+            //cout<<buf<<endl;
+
+            status=5;
+            return status;
+
+        }
       	if(v[0]==createuser)
       	{	
       		cout<<"inside create user wala if"<<endl;
@@ -187,7 +230,7 @@ class getcommand
       		}
             char buf[10]={'\0'};
             read(sock,buf,10);
-            //cout<<buf<<endl;
+            cout<<buf<<endl;
 
         	status=1;
         	return status;
@@ -297,6 +340,15 @@ class getcommand
         {
             create_group(v,sock);
         }
+        if(status==4)
+        {
+            join_group(v,sock);
+        }
+
+        if(status==5)
+        {
+            leave_group(v,sock);
+        }
 
         if(status==8)
         {
@@ -398,6 +450,69 @@ void getcommand::list_groups(vector<char*> v, int sock)
         read(sock,buffer,100);
         cout<<buffer<<endl;
         send(sock,"okay",strlen("okay"),0);
+    }
+
+}
+
+void getcommand::leave_group(vector<char*> v, int sock)
+{
+    send(sock,v[1],strlen(v[1]),0);
+    char comm[50]={'\0'};
+    read(sock,comm,50);
+    string com="port";
+    string incoming=string(comm);
+
+    if(com==incoming)
+    {
+        char port_ad[10];
+        bzero(port_ad,'\0');
+        sprintf(port_ad, "%d", port_);
+        cout<<"port of client is"<<port_ad<<endl;
+        
+        send(sock, port_ad, strlen(port_ad),0);
+        char buf[25]={'\0'};
+        bzero(buf,'\0');
+        read(sock,buf,25);
+        cout<<buf<<endl;
+    }
+    else
+    {
+        char b[50]={'\0'};
+        read(sock,b,50);
+        cout<<"Wrong group id"<<endl;
+    }
+}
+
+void getcommand::join_group(vector<char*> v, int sock)
+{
+    send(sock,v[1],strlen(v[1]),0);
+    char comm[50]={'\0'};
+    bzero(comm,'\0');
+    read(sock,comm,50);
+    cout<<endl;
+    string po=string(comm);
+    string p="port";
+    if(po==p)
+    {
+        char port_ad[10];
+        bzero(port_ad,'\0');
+        sprintf(port_ad, "%d", port_);
+        cout<<"port of client is"<<port_ad<<endl;
+        
+        send(sock, port_ad, strlen(port_ad),0);
+        char buf[25]={'\0'};
+        bzero(buf,'\0');
+        cout<<endl;
+        read(sock,buf,25);
+        cout<<buf<<endl;
+    }
+    else
+    {   
+        cout<<"inside else"<<endl;
+        char b[50]={'\0'};
+        read(sock,b,50);
+        cout<<endl;
+        cout<<"wrong group id"<<endl;
     }
 
 }

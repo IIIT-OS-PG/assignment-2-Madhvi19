@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
     	printf("\nConnection Failed \n"); 
     	exit(-1); 
   	} 
-  	cout<<"Socket address is "<<sock<<endl;
+  	//cout<<"Socket address is "<<sock<<endl;
   	
 
   	while(1)
