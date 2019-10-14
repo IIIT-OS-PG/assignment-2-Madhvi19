@@ -131,7 +131,7 @@ int sort_command(string v, int newsock)
   	string leavegroup="leave_group";
   	string listrequests="list_requests";
   	string acceptrequest="accept_request";
-  	string listgroups="lisst_groups";
+  	string listgroups="list_groups";
   	string listfiles="list_files";
   	string download="download_file";
   	string logout="logout";
@@ -310,6 +310,39 @@ void act(int status, int newsock)
 
   			send(newsock,"group created",strlen("group created"),0);
   		
+  		}
+
+  		if(status==8)
+  		{
+  			char buf[10]={'\0'};
+  			read(newsock,buf,10);
+  			cout<<buf<<endl;
+  			vector<string> gids;
+
+  			vector<group>::iterator itr;
+  			for(itr=active_groups.begin();itr!=active_groups.end();++itr)
+  			{
+  				//cout<<itr->gid<<endl;
+  				gids.push_back(itr->gid);
+			}
+			int length=gids.size();
+			char l[length+1]={'\0'};
+			sprintf(l, "%d", length);
+			send(newsock,l,strlen(l),0);
+
+			read(newsock,buf,10);
+
+			for(auto i=gids.begin();i!=gids.end();++i)
+			{
+				string s=*i;
+				char gname[100]={'\0'};
+				strcpy(gname,s.c_str());
+				send(newsock,gname,strlen(gname),0);
+				char buff[10]={'\0'};
+				read(newsock,buff,10);
+				cout<<buff<<endl;
+			}
+
   		}
  
   		

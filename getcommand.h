@@ -17,6 +17,7 @@ class getcommand
     int port_=0;
     void login_user(vector<char*> , int);
     void create_group(vector<char*>, int);
+    void list_groups(vector<char*>, int);
 
     bool uploadfile(vector<char*> v, int sock)
     {
@@ -146,7 +147,7 @@ class getcommand
       	string leavegroup="leave_group";
       	string listrequests="list_requests";
       	string acceptrequest="accept_request";
-      	string listgroups="lisst_groups";
+      	string listgroups="list_groups";
       	string listfiles="list_files";
       	string download="download_file";
       	string logout="logout";
@@ -154,6 +155,25 @@ class getcommand
       	string stop="stop_sharing";
 
        	int status;
+        if(v[0]==listgroups)
+        {
+            cout<<"inside list groups wala if"<<endl;
+            char com[listgroups.size()+1];
+            strcpy(com,listgroups.c_str());
+            int x;
+            cout<<com<<endl;
+            if ((x=send(sock,com,strlen(com),0))<0)     //command sent
+            {
+                perror("Cannot send command to the tracker\n");
+            }
+
+            char buf[10]={'\0'};
+            read(sock,buf,10);  //reading okay
+
+            status =8;
+            return status;
+
+        }
       	if(v[0]==createuser)
       	{	
       		cout<<"inside create user wala if"<<endl;
@@ -277,6 +297,11 @@ class getcommand
         {
             create_group(v,sock);
         }
+
+        if(status==8)
+        {
+            list_groups(v,sock);
+        }
       		
       	if(status==14)
         {
@@ -356,6 +381,23 @@ void getcommand::create_group(vector<char*> v, int sock)
     bzero(buf,'\0');
     read(sock,buf,100);
     cout<<buf<<endl;
+}
 
+void getcommand::list_groups(vector<char*> v, int sock)
+{
+    send(sock,"hello",strlen("hello"),0);
+    char len[10]={'\0'};
+    read(sock,len,10);
+    int length=atoi(len);
+
+    send(sock,"ok",strlen("ok"),0);
+
+    while(length--)
+    {   
+        char buffer[100]={'\0'};
+        read(sock,buffer,100);
+        cout<<buffer<<endl;
+        send(sock,"okay",strlen("okay"),0);
+    }
 
 }
