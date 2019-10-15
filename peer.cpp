@@ -45,8 +45,9 @@ void* connection_handler(void* sock)
 		int block=0;
 
 		char buffer[100]={'\0'};
-
+		cout<<endl;
     	block=read(newsock, buffer, 100);
+    	cout<<endl;
     	cout<<buffer<<endl;
 
 		cout<<"Done"<<endl;

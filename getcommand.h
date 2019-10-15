@@ -20,6 +20,7 @@ class getcommand
     void list_groups(vector<char*>, int);
     void leave_group(vector<char*>, int);
     void join_group(vector<char*>, int);
+    void list_requests(vector<char*>, int);
 
     bool uploadfile(vector<char*> v, int sock)
     {
@@ -83,8 +84,9 @@ class getcommand
         send(sock,result,strlen(result),0);
 
         char b[10]={'\0'};
+        cout<<endl;
         read(sock,b,10);
-
+        cout<<endl;
         for(int i=0;i<sha_container.size();i++)
         {
             int length=sha_container[i].size();
@@ -99,8 +101,9 @@ class getcommand
             if((x=send(sock, cstr, length, 0))>0)
             {
                 char buff[100]={'\0'};
-
+                cout<<endl;
                 int valread=read(sock, buff, 100);
+                cout<<endl;
                 cout<<buff<<endl;
             }
             else
@@ -120,10 +123,13 @@ class getcommand
     	{
     		perror("Cannot send user id to the tracker\n");
     	}
-    	char buf[100]={'\0'};
-    	read(sock,buf,100);
+    	char cru[100]={'\0'};
+        cout<<endl;
+        read(sock,cru,100);
+        cout<<endl;
+
         cout<<"ack of user id"<<endl;
-    	cout<<buf<<endl;
+    	cout<<cru<<endl;
     	if(send(sock,v[2],strlen(v[2]),0)<0)
     	{
     		perror("Cannot send user id to the tracker\n");
@@ -132,7 +138,9 @@ class getcommand
 
     	char nn[50]={'\0'};
         bzero(nn,'\0');
+        cout<<endl;
     	read(sock,nn,50);
+        cout<<endl;
     	cout<<nn<<endl;
     	
     }
@@ -159,6 +167,27 @@ class getcommand
       	string stop="stop_sharing";
 
        	int status;
+        if(v[0]==listrequests)
+        {
+            cout<<"inside listrequests if "<<endl;
+
+            char com[listrequests.size()+1];
+            strcpy(com,listrequests.c_str());
+            int x;
+            cout<<com<<endl;
+            if ((x=send(sock,com,strlen(com),0))<0)     //command sent
+            {
+                perror("Cannot send command to the tracker\n");
+            }
+
+            char buf[10]={'\0'};
+            cout<<endl;
+            read(sock,buf,10);  //reading okay
+            cout<<endl;
+            status =6;
+            return status;
+
+        }
         if(v[0]==joingroup)
         {   
             cout<<"inside joingroup wala if"<<endl;
@@ -173,8 +202,9 @@ class getcommand
             }
 
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);  //reading okay
-
+            cout<<endl;
             status =4;
             return status;
 
@@ -192,8 +222,9 @@ class getcommand
             }
 
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);  //reading okay
-
+            cout<<endl;
             status =8;
             return status;
 
@@ -210,7 +241,9 @@ class getcommand
                 perror("Cannot send command to the tracker\n");
             }
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);
+            cout<<endl;
             //cout<<buf<<endl;
 
             status=5;
@@ -229,7 +262,9 @@ class getcommand
       			perror("Cannot send command to the tracker\n");
       		}
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);
+            cout<<endl;
             cout<<buf<<endl;
 
         	status=1;
@@ -247,7 +282,9 @@ class getcommand
                 perror("Cannot send command to the tracker\n");
             }
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);
+            cout<<endl;
             cout<<buf<<endl;
 
             status=14;
@@ -266,7 +303,9 @@ class getcommand
                 perror("Cannot send command to the tracker\n");
             }
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);
+            cout<<endl;
             cout<<buf<<endl;
 
             status=2;
@@ -285,7 +324,9 @@ class getcommand
                 perror("Cannot send command to the tracker\n");
             }
             char buf[10]={'\0'};
+            cout<<endl;
             read(sock,buf,10);
+            cout<<endl;
             cout<<buf<<endl;
 
             status=3;
@@ -349,6 +390,10 @@ class getcommand
         {
             leave_group(v,sock);
         }
+        if(status==6)
+        {
+            list_requests(v,sock);
+        }
 
         if(status==8)
         {
@@ -377,7 +422,9 @@ void getcommand::login_user(vector<char*> v, int sock)
       perror("Cannot send user id to the tracker\n");
     }
     char buf[100]={'\0'};
+    cout<<endl;
     read(sock,buf,100);
+    cout<<endl;
     //cout<<buf<<endl;
     if(send(sock,v[2],strlen(v[2]),0)<0)
     {
@@ -385,7 +432,9 @@ void getcommand::login_user(vector<char*> v, int sock)
     }
 
     bzero(buf,100);
+    cout<<endl;
     read(sock,buf,100);
+    cout<<endl;
     //cout<<buf<<endl;
     string b=string(buf);
     string welcome="welcome!";
@@ -402,7 +451,9 @@ void getcommand::login_user(vector<char*> v, int sock)
         perror("Cannot send socket address to the client\n");
       }
       bzero(buf,0);
+      cout<<endl;
       read(sock,buf,100);
+      cout<<endl;
       cout<<"Welcome!"<<endl;
     }
     else if(wrong==b)
@@ -423,15 +474,19 @@ void getcommand::create_group(vector<char*> v, int sock)
       perror("Error in sending\n");
 
     char buf[100]={'\0'};
+    cout<<endl;
     read(sock,buf, 100);
-    cout<<buf;
+    cout<<endl;
+    cout<<buf<<endl;
 
     char port_ad[10];
     sprintf(port_ad, "%d", port_);
     cout<<"port of client is"<<port_ad<<endl;
     send(sock,port_ad, strlen(port_ad),0);
     bzero(buf,'\0');
+    cout<<endl;
     read(sock,buf,100);
+    cout<<endl;
     cout<<buf<<endl;
 }
 
@@ -447,7 +502,9 @@ void getcommand::list_groups(vector<char*> v, int sock)
     while(length--)
     {   
         char buffer[100]={'\0'};
+        cout<<endl;
         read(sock,buffer,100);
+        cout<<endl;
         cout<<buffer<<endl;
         send(sock,"okay",strlen("okay"),0);
     }
@@ -458,7 +515,9 @@ void getcommand::leave_group(vector<char*> v, int sock)
 {
     send(sock,v[1],strlen(v[1]),0);
     char comm[50]={'\0'};
+    cout<<endl;
     read(sock,comm,50);
+    cout<<endl;
     string com="port";
     string incoming=string(comm);
 
@@ -472,13 +531,13 @@ void getcommand::leave_group(vector<char*> v, int sock)
         send(sock, port_ad, strlen(port_ad),0);
         char buf[25]={'\0'};
         bzero(buf,'\0');
+        cout<<endl;
         read(sock,buf,25);
+        cout<<endl;
         cout<<buf<<endl;
     }
     else
     {
-        char b[50]={'\0'};
-        read(sock,b,50);
         cout<<"Wrong group id"<<endl;
     }
 }
@@ -488,8 +547,9 @@ void getcommand::join_group(vector<char*> v, int sock)
     send(sock,v[1],strlen(v[1]),0);
     char comm[50]={'\0'};
     bzero(comm,'\0');
-    read(sock,comm,50);
     cout<<endl;
+    read(sock,comm,50);
+    cout<<comm<<endl;
     string po=string(comm);
     string p="port";
     if(po==p)
@@ -504,15 +564,85 @@ void getcommand::join_group(vector<char*> v, int sock)
         bzero(buf,'\0');
         cout<<endl;
         read(sock,buf,25);
+        cout<<endl;
         cout<<buf<<endl;
     }
     else
-    {   
-        cout<<"inside else"<<endl;
-        char b[50]={'\0'};
-        read(sock,b,50);
-        cout<<endl;
+    {  
         cout<<"wrong group id"<<endl;
     }
+
+}
+
+void getcommand::list_requests(vector<char*> v, int sock)
+{
+    cout<<"inside list_requests function"<<endl;
+    send(sock,v[1],strlen(v[1]),0);
+    cout<<"group id sent"<<v[1]<<endl;
+    char comm[50]={'\0'};
+    bzero(comm,'\0');
+    cout<<endl;
+    read(sock,comm,50);
+    cout<<"the output sent by the tracker is "<<comm<<endl;
+
+    string out=string(comm);
+    string wrong_gid="wrong gid";
+    string not_owner="not an owner";
+    if(out==wrong_gid)
+    {
+        cout<<"wrong group id"<<endl;
+    }
+    else
+    {
+        cout<<"inside else"<<endl;
+        int length=stoi(out);
+        vector<string> requests;
+           
+        char pport[10];
+        bzero(pport,'\0');
+        sprintf(pport,"%d",port_);
+
+        send(sock,pport,strlen(pport),0);
+
+        char ree[50]={'\0'};
+        bzero(ree,50);
+        cout<<endl;
+        read(sock,ree,50);
+        cout<<endl;
+        string r=string(ree);
+        string noo="no";
+        if(r==noo)
+        {
+            cout<<"You are not an owner"<<endl;
+        }
+
+        else
+        {
+            
+            for(int i=0;i<length;i++)
+            {
+                char re[50];
+                bzero(re,50);
+                cout<<endl;
+                read(sock, re,50);
+                cout<<endl;
+                int madh=atoi(re);
+                cout<<"madh "<<madh<<endl;
+                string seq=string(re);
+                requests.push_back(seq);
+                char *kl="user received";
+                send(sock,kl,strlen(kl),0);
+                cout<<"user received"<<endl;
+            }
+
+            for(auto i=0;i<length;i++)
+            {
+                cout<<requests[i]<<endl;
+            }
+        
+        }
+    }
+
+    cout<<"out of else"<<endl;
 
 }

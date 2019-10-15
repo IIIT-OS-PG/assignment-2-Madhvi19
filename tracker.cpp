@@ -227,12 +227,12 @@ void act(int status, int newsock)
   		string user_name=string(b);
 		send(newsock,"ok1",3,0);
 
-		char buf[100];
-		bzero(buf,100);
+		char cu[100];
+		bzero(cu,100);
 
-		read(newsock,buf, 100);
-		cout<<"buf "<<buf<<endl;
-		string password=string(buf);
+		read(newsock,cu, 100);
+		cout<<"cu "<<cu<<endl;
+		string password=string(cu);
 		
 		cout<<user_name<<endl;
 		cout<<password<<endl;
@@ -261,13 +261,13 @@ void act(int status, int newsock)
   		//string user_name=string(b);
 		send(newsock,"ok",2,0);
 
-		char buff[100];
-		bzero(buff,100);
+		char lg[100];
+		bzero(lg,100);
 
-		read(newsock,buff, 100);
+		read(newsock,lg, 100);
 		//string password=string(buf);
 		//send(newsock,"ok",2,0);
-		string c_id=login_user(bi,buff,newsock);
+		string c_id=login_user(bi,lg,newsock);
 		//cout<<"current client id is "<<c_id<<endl;
 	
   	}
@@ -313,43 +313,71 @@ void act(int status, int newsock)
 
   	if(status==4)
   	{
-  		char buf[100]={'\0'};
-  		read(newsock,buf,100);
+  		cout<<"inside join group if "<<endl;
+  		char jg[100]={'\0'};
+  		cout<<endl;
+  		read(newsock,jg,100);
   		cout<<endl;
   		//cout<<buf<<endl;
-  		string gid=string(buf);
+  		string gid=string(jg);
 
   		vector<group>::iterator itr;
+  		bool flag=false;
 
   		for(itr=active_groups.begin();itr!=active_groups.end();++itr)
   		{
   			if(itr->gid==gid)
   			{
+  				flag=true;
   				send(newsock,"port",strlen("port"),0);
   				char buffer[50]={'\0'};
+  				cout<<endl;
   				read(newsock,buffer,50);
   				cout<<endl;
   				string c_port=string(buffer);
+  				bool if_member=false;
 
-  				itr->pending_requests.insert(make_pair(c_port,gid));
+  				for(auto y=itr->members.begin();y!=itr->members.end();++y)
+  					{
+  						if(c_port==*y)
+  						{	
+  							if_member=true;
+  							send(newsock,"already a member",strlen("already a member"),0);
+  						}
+  					}
 
-  				send(newsock,"request sent",strlen("request sent"),0);  					
+  				if(if_member==false)
+  				{
+  					itr->pending_requests.insert(make_pair(c_port,gid));
+
+  					send(newsock,"request sent",strlen("request sent"),0);
+
+               /*for(auto t=itr->pending_requests.begin();t!=itr->pending_requests.end();t++)
+               {
+                  cout<<t->first<<endl;
+               }*/
+  				}
+  				 
+  				break; 					
 			}
   		}
-  		if(itr==active_groups.end())
+
+  		if(flag==false)
   		{
   			send(newsock,"wrong gid",strlen("wrong gid"),0);
   		}
-  		
-
   	}
 
   	if(status==5)
   	{	
-  		char buf[100]={'\0'};
-  		read(newsock,buf,100);
-  		cout<<buf<<endl;
-  		string gid=string(buf);
+  		cout<<"inside leave_group if "<<endl;
+  		char lgp[100]={'\0'};
+  		cout<<endl;
+  		read(newsock,lgp,100);
+  		cout<<endl;
+  		cout<<lgp<<endl;
+  		string gid=string(lgp);
+  		bool flag2=false;
 
   		vector<group>::iterator itr;
 
@@ -357,8 +385,10 @@ void act(int status, int newsock)
   		{
   			if(itr->gid==gid)
   			{
+  				flag2=true;
   				send(newsock,"port",strlen("port"),0);
   				char buffer[50]={'\0'};
+  				cout<<endl;
   				read(newsock,buffer,50);
   				cout<<endl;
   				string c_port=string(buffer);
@@ -369,23 +399,124 @@ void act(int status, int newsock)
   				}
   				else
   				{
-  					send(newsock,"No longer a member now",strlen("No longer a member now"),0);
+  					bool if_mem=false;
+  					for(auto x=itr->members.begin();x!=itr->members.end();++x)
+  					{
+  						if(c_port==*x)
+  						{	
+  							if_mem=true;
+  							itr->members.erase(x);
+  							send(newsock,"No longer a member now",strlen("No longer a member now"),0);
+						}
+  					}
+
+  					if(if_mem==false)
+  					{
+  						send(newsock,"You are not a member",strlen("You are not a member"),0);
+  					}
   				}
 
+  				cout<<"Present members are"<<endl;
+  				for(auto xx=itr->members.begin();xx!=itr->members.end();++xx)
+  				{
+  					cout<<*xx<<"  ";
+  				}
+  				cout<<endl;
+
   			}
+
 		}
 
-		if(itr==active_groups.end())
+		if(flag2==false)
 		{
 			send(newsock,"Wrong id",strlen("Wrong id"),0);
 		}
 
   	}
 
+   if(status==6)
+   {
+      cout<<"inside list request if";
+
+      char lreq[100]={'\0'};
+      cout<<endl;
+      read(newsock,lreq,100);
+      cout<<endl;
+      cout<<"received group id is "<<lreq<<endl;
+      bool flag1=false;
+
+      string gid=string(lreq);
+
+      vector<group>::iterator itr;
+
+      for(itr=active_groups.begin();itr!=active_groups.end();++itr)
+      {
+         if(itr->gid==gid)
+         {   
+            cout<<"inside for loop if condition"<<endl;
+            flag1=true;
+            cout<<"flag1 is "<<flag1<<endl;
+
+            int len=itr->pending_requests.size();
+
+            char size[len+1];
+            bzero(size,'\0');
+            sprintf(size,"%d",len);
+
+            send(newsock,size,strlen(size),0);
+
+            char port_a[10]={'\0'};
+            cout<<endl;
+            read(newsock,port_a,10);//readin port of the client's server
+            cout<<endl;
+            string pp=string(port_a);
+            cout<<"port of client is"<<endl;
+            if(itr->owner!=pp)
+            {
+               cout<<"inside if not owner"<<endl;
+               send(newsock,"no",strlen("no"),0);
+            }
+            else
+            {
+               send(newsock,"start",strlen("start"),0);
+                    
+               cout<<"inside when trying to send requests"<<endl;
+               for(auto xx=itr->pending_requests.begin();xx!=itr->pending_requests.end();++xx)
+               {
+                  cout<<xx->first<<endl;
+                  string us=xx->first;
+                  char uss[us.size()+1];
+                  strcpy(uss,us.c_str());
+                  cout<<"port of the user is"<<uss<<endl;
+                  send(newsock,uss,strlen("uss"),0);
+
+                  char okay[10]={'\0'};
+                  cout<<endl;
+                  read(newsock,okay,10);
+                  cout<<endl;
+                  cout<<okay<<endl;
+               }
+            }
+         }
+
+         break;
+      }
+
+      if(itr==active_groups.end() && flag1==false)
+      {
+         cout<<"inside if flag1 is false"<<endl;
+         send(newsock,"wrong gid",strlen("wrong gid"),0);
+      }
+      cout<<"leaving list_requests"<<endl;
+   }
+
   	if(status==8)
   	{
+  		cout<<"inside list groups if"<<endl;
   		char buf[10]={'\0'};
+  		cout<<endl;
   		read(newsock,buf,10);
+  		cout<<endl;
   		cout<<buf<<endl;
   		vector<string> gids;
 
@@ -399,9 +530,9 @@ void act(int status, int newsock)
 		char l[length+1]={'\0'};
 		sprintf(l, "%d", length);
 		send(newsock,l,strlen(l),0);
-
+		cout<<endl;
 		read(newsock,buf,10);
-
+		cout<<endl;
 		for(auto i=gids.begin();i!=gids.end();++i)
 		{
 			string s=*i;
@@ -409,7 +540,9 @@ void act(int status, int newsock)
 			strcpy(gname,s.c_str());
 			send(newsock,gname,strlen(gname),0);
 			char buff[10]={'\0'};
+			cout<<endl;
 			read(newsock,buff,10);
+			cout<<endl;
 			cout<<buff<<endl;
 		}
   	}
@@ -419,7 +552,9 @@ void act(int status, int newsock)
 	{
 		char buf[10];
 	  	//cout<<"inside case 14"<<endl;
+	  	cout<<endl;
 	  	read(newsock,buf,10);
+	  	cout<<endl;
 	  	int size=atoi(buf);
 	  	cout<<size<<endl;
 	  	send(newsock,"ok",strlen("ok"),0);
@@ -428,7 +563,9 @@ void act(int status, int newsock)
 	  		//cout<<"inside while"<<endl;
 	  		char buffer[20];
 	  		bzero(buffer,20);
+	  		cout<<endl;
 	  		read(newsock,buffer,20);
+	  		cout<<endl;
 	  		cout<<buffer<<endl;
 	    	string ss=string(buffer);
 	    	string s=ss.substr(0,20);
@@ -464,14 +601,16 @@ void* connection_handler(void* sock)
 		char command_buf[100];
 		bzero(command_buf,100);
 		int vd=0;
-		vd=read(newsock, command_buf,100);
-		{	
-			cout<<"command is "<<command_buf<<endl;
-			string command=string(command_buf);
-			send(newsock,"ok",2,0);
-			int status=sort_command(command, newsock);
-			act(status, newsock);
-		}
+		cout<<endl;
+		vd=read(newsock, command_buf,100);	
+		cout<<endl;
+
+		cout<<"command is "<<command_buf<<endl;
+		string command=string(command_buf);
+		send(newsock,"ok",2,0);
+		int status=sort_command(command, newsock);
+		act(status, newsock);
+		
 	}
 }
 
